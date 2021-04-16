@@ -4,6 +4,14 @@ import {useHistory} from "react-router-dom";
 import overviewConfig from "../config/overview.config";
 import tiles from "../config/tiles.config";
 
+const readFile = async () => {
+  const reader = new FileReader()
+  reader.onload = async (e) => { 
+    const text = ("../config/test.csv")
+    console.log(text);
+  };
+  reader.readAsText()
+}
 interface Props {
     enabled: any;
 }
