@@ -28,6 +28,14 @@ function deleteDocument(docUri, database) {
   });
 }
 
+function deleteDocuments(docUris, database) {
+  xdmp.invoke('/data-hub/5/impl/hub-utils/invoke-multiple-delete.sjs', {docUris}, {
+    database: xdmp.database(database),
+    commit: 'auto',
+    update: 'true',
+    ignoreAmps: true
+  });
+}
 /**
  * @param event
  * @param message Expected to be a string; if you have JSON, call hubTraceJson
@@ -187,6 +195,7 @@ function getErrorMessage(e) {
 module.exports = {
   capitalize,
   deleteDocument,
+  deleteDocuments,
   error,
   evalInDatabase: module.amp(evalInDatabase),
   getErrorMessage,

@@ -20,9 +20,9 @@ const hubUtils = require("/data-hub/5/impl/hub-utils.sjs");
 const StepDefinition = require("/data-hub/5/impl/stepDefinition.sjs");
 
 /**
- * 
- * @param flowName 
- * @param jobId 
+ *
+ * @param flowName
+ * @param jobId
  * @returns {object} the Job object (object, not a document node)
  */
 function createJob(flowName, jobId = null ) {
@@ -37,8 +37,8 @@ function createJob(flowName, jobId = null ) {
 
 /**
  * Saves a newly constructed Job; use createJob to both construct and save a Job.
- * 
- * @param job 
+ *
+ * @param job
  */
 function saveNewJob(job) {
   const jobUri = "/jobs/" + job.job.jobId + ".json";
@@ -281,9 +281,9 @@ module.exports = {
 module.exports.updateJob = module.amp(
   /**
    * Only updates the document, does not make any modifications to it, so nothing is returned.
-   * 
+   *
    * @param jobDoc
-   * @returns 
+   * @returns
    */
   function updateJob(jobDoc) {
     const jobId = jobDoc.job.jobId;
@@ -296,3 +296,62 @@ module.exports.updateJob = module.amp(
   }
 );
 
+module.exports.deleteJobDocs = module.amp(
+  /**
+   * Delete all job and batch documents in the JOBS database for jobs that are older than retainDuration.
+   *
+   * @param retainStart A xs.dateTime that will be the start of the period for which documents are retained in
+   *   the JOBS database.
+   * @param batchSize The maximum number of documents to delete. If not specified, delete all documents. This,
+   *   along with the 'remaining' return value, can be used to create a bulk data service.
+   *
+   * @returns { deleted, remaining } The number of documents deleted and the number of documents remaining
+   *   that would have satisfy the criteria to be deleted.
+   */
+  function deleteJobDocs(retainStart, batchSize = null) {
+    xdmp.securityAssert("http://marklogic.com/data-hub/privileges/delete-jobs", "execute");
+
+    const uriOptions = batchSize == null ? [] : [ `limit=${batchSize}` ];
+
+    const { urisToDelete, remaining } = fn.head(hubUtils.invokeFunction(function () {
+      const jobQuery = cts.andQuery([
+        cts.collectionQuery(['Job']),
+        cts.rangeQuery(cts.jsonPropertyReference('timeEnded'), '<', retainStart),
+        // only want jobs that have finished - there can be very long running jobs
+        cts.jsonPropertyValueQuery('jobStatus', [ 'finished', 'failed' ])
+      ]);
+
+      const jobIds = cts.values(cts.jsonPropertyReference('jobId'), null, uriOptions, jobQuery).toArray();
+
+      const batchUriQuery = cts.andQuery([
+        cts.collectionQuery([ 'Batch' ]),
+        cts.rangeQuery(cts.jsonPropertyReference('jobId'), '=', jobIds)
+      ]);
+      const batchUrisToDelete = cts.uris(null, uriOptions, batchUriQuery).toArray();
+      if(batchUrisToDelete.length > 0) {
+        return {
+          urisToDelete: batchUrisToDelete,
+          remaining: true
+        }
+      } else {
+        const remainingJobCount = cts.estimate(jobQuery);
+        const jobUriQuery = cts.andQuery([
+          cts.collectionQuery([ 'Job' ]),
+          cts.rangeQuery(cts.jsonPropertyReference('jobId'), '=', jobIds)
+        ]);
+        const jobUrisToDelete = cts.uris(null, null, jobUriQuery).toArray();
+        return {
+          urisToDelete: jobUrisToDelete,
+          remaining: remainingJobCount > jobUrisToDelete.length
+        }
+      }
+    }, config.JOBDATABASE));
+
+    hubUtils.deleteDocuments(urisToDelete, config.JOBDATABASE);
+
+    const deleted = urisToDelete.length;
+    return {
+      deleted,
+      remaining
+    };
+  });
