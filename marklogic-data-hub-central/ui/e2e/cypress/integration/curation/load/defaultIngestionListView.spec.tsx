@@ -130,20 +130,31 @@ describe("Validate CRUD functionality from list view", () => {
     //should route user back to load page list view
     cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
   });
-  it("Add step to a new flow", () => {
-    loadPage.addStepToNewFlowListView(stepName);
-    cy.waitForAsyncRequest();
-    cy.findByText("New Flow").should("be.visible");
+  // it.skip("Add step to a new flow", () => {
+  //   loadPage.addStepToNewFlowListView(stepName);
+  //   cy.waitForAsyncRequest();
+  //   cy.findByText("New Flow").should("be.visible");
+  //   runPage.setFlowName(flowName);
+  //   runPage.setFlowDescription(`${flowName} description`);
+  //   loadPage.confirmationOptions("Save").click();
+  //   cy.waitForAsyncRequest();
+  //   cy.verifyStepAddedToFlow("Load", stepName, flowName);
+  // });
+  it("Create a new flow and navigate back to load step", () => {
+    cy.waitUntil(() => toolbar.getRunToolbarIcon()).click();
+    cy.waitUntil(() => runPage.getFlowName("personJSON").should("be.visible"));
+    runPage.createFlowButton().click();
+    runPage.newFlowModal().should("be.visible");
     runPage.setFlowName(flowName);
-    runPage.setFlowDescription(`${flowName} description`);
     loadPage.confirmationOptions("Save").click();
-    cy.waitForAsyncRequest();
-    cy.verifyStepAddedToFlow("Load", stepName, flowName);
+    cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
+    loadPage.loadView("table").click();
+    cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
   });
-  it("Delete the step and Navigate back to load step", () => {
-    runPage.deleteStep(stepName).click();
-    loadPage.confirmationOptions("Yes").click();
-    cy.waitForAsyncRequest();
+  it.skip("Delete the step and Navigate back to load step", () => {
+    // runPage.deleteStep(stepName).click();
+    // loadPage.confirmationOptions("Yes").click();
+    // cy.waitForAsyncRequest();
     cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
     loadPage.loadView("table").click();
     cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
