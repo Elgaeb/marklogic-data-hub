@@ -130,24 +130,42 @@ describe("Validate CRUD functionality from list view", () => {
     //should route user back to load page list view
     cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
   });
-  it("Add step to a new flow", () => {
-    loadPage.addStepToNewFlowListView(stepName);
-    cy.waitForAsyncRequest();
-    cy.findByText("New Flow").should("be.visible");
+  // it.skip("Add step to a new flow", () => {
+  //   loadPage.addStepToNewFlowListView(stepName);
+  //   cy.waitForAsyncRequest();
+  //   cy.findByText("New Flow").should("be.visible");
+  //   runPage.setFlowName(flowName);
+  //   runPage.setFlowDescription(`${flowName} description`);
+  //   loadPage.confirmationOptions("Save").click();
+  //   cy.waitForAsyncRequest();
+  //   cy.verifyStepAddedToFlow("Load", stepName, flowName);
+  // });
+
+  // TODO Add unit tests to handle removed functionality
+  // - Add Step in New Flow in Load View
+  // - Add Step to New Flow in Run View (from Load View)
+
+  // EDITED updated test
+  it("Create a new flow and navigate back to load step", () => {
+    cy.waitUntil(() => toolbar.getRunToolbarIcon()).click();
+    cy.waitUntil(() => runPage.getFlowName("personJSON").should("be.visible"));
+    runPage.createFlowButton().click();
+    runPage.newFlowModal().should("be.visible");
     runPage.setFlowName(flowName);
-    runPage.setFlowDescription(`${flowName} description`);
     loadPage.confirmationOptions("Save").click();
-    cy.waitForAsyncRequest();
-    cy.verifyStepAddedToFlow("Load", stepName, flowName);
-  });
-  it("Delete the step and Navigate back to load step", () => {
-    runPage.deleteStep(stepName).click();
-    loadPage.confirmationOptions("Yes").click();
-    cy.waitForAsyncRequest();
     cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
     loadPage.loadView("table").click();
     cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
   });
+
+  // it.skip("Delete the step and Navigate back to load step", () => {
+  //   runPage.deleteStep(stepName).click();
+  //   loadPage.confirmationOptions("Yes").click();
+  //   cy.waitForAsyncRequest();
+  //   cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
+  //   loadPage.loadView("table").click();
+  //   cy.waitUntil(() => loadPage.addNewButton("list").should("be.visible"));
+  // });
   it("Verify Run in an existing flow", {defaultCommandTimeout: 120000}, () => {
     loadPage.loadView("table").click();
     loadPage.runStep(stepName).click();
@@ -167,28 +185,57 @@ describe("Validate CRUD functionality from list view", () => {
     loadPage.confirmationOptions("Yes").click();
     runPage.getFlowName(flowName).should("not.exist");
   });
-  it("Verify Run in a new flow", {defaultCommandTimeout: 120000}, () => {
+  // it.skip("Verify Run in a new flow", {defaultCommandTimeout: 120000}, () => {
+  //   cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
+  //   loadPage.loadView("table").click();
+  //   loadPage.runStep(stepName).click();
+  //   //Just deleted flow should not be visible on flows list
+  //   cy.findByText(flowName).should("not.exist");
+  //   loadPage.runInNewFlow(stepName).click({force: true});
+  //   cy.waitForAsyncRequest();
+  //   cy.findByText("New Flow").should("be.visible");
+  //   runPage.setFlowName(flowName);
+  //   runPage.setFlowDescription(`${flowName} description`);
+  //   cy.wait(500);
+  //   loadPage.confirmationOptions("Save").click();
+  //   cy.wait(500);
+  //   cy.waitForAsyncRequest();
+  //   cy.verifyStepAddedToFlow("Load", stepName, flowName);
+  //   //Upload file to start running
+  //   cy.uploadFile("input/test-1.json");
+  //   cy.wait("@getJobs").its("response.statusCode").should("eq", 200);
+  //   cy.verifyStepRunResult("success", "Ingestion", stepName);
+  //   tiles.closeRunMessage();
+  // });
+
+  it("Verify Run in Flow popup, create new flow and add step", {defaultCommandTimeout: 120000}, () => {
+    // EDITED check Run in Flow popup
     cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
     loadPage.loadView("table").click();
     loadPage.runStep(stepName).click();
     //Just deleted flow should not be visible on flows list
     cy.findByText(flowName).should("not.exist");
-    loadPage.runInNewFlow(stepName).click({force: true});
-    cy.waitForAsyncRequest();
-    cy.findByText("New Flow").should("be.visible");
+    // EDITED cancel instead of letting run
+    loadPage.cancelButton().click({force: true});
+
+    // TODO Add unit tests to handle removed functionality
+    // - Run Step in New Flow in Run View
+
+    // EDITED create new flow
+    cy.waitUntil(() => toolbar.getRunToolbarIcon()).click();
+    runPage.createFlowButton().click();
+    runPage.newFlowModal().should("be.visible");
     runPage.setFlowName(flowName);
     runPage.setFlowDescription(`${flowName} description`);
     cy.wait(500);
     loadPage.confirmationOptions("Save").click();
+    // EDITED add step to that new flow
+    runPage.addStep(flowName);
+    runPage.addStepToFlow(stepName);
+    runPage.verifyStepInFlow("Load", stepName);
     cy.wait(500);
-    cy.waitForAsyncRequest();
-    cy.verifyStepAddedToFlow("Load", stepName, flowName);
-    //Upload file to start running
-    cy.uploadFile("input/test-1.json");
-    cy.wait("@getJobs").its("response.statusCode").should("eq", 200);
-    cy.verifyStepRunResult("success", "Ingestion", stepName);
-    tiles.closeRunMessage();
   });
+
   it("Verify Run Load step in flow where step exists, should run automatically", {defaultCommandTimeout: 120000}, () => {
     cy.waitUntil(() => toolbar.getLoadToolbarIcon()).click();
     loadPage.loadView("table").click();
