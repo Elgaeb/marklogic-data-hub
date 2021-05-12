@@ -1,5 +1,5 @@
 {
-    "endpoint": "/data-hub/5/bulk-data-services/job/deleteJobs.sjs",
+    "endpoint": "/data-hub/5/data-services/bulk/deleteJobs.sjs",
     "desc": "Delete all job and batch documents older than a specified duration.",
     "params": [
         {

@@ -33,7 +33,7 @@ public class DeleteJobsTest extends AbstractHubCoreTest {
     protected ObjectMapper mapper = new ObjectMapper();
 
     protected ObjectNode apiObj;
-    protected static String apiPath = "/ml-modules/root/data-hub/5/bulk-data-services/job/deleteJobs.api";
+    protected static String apiPath = "/ml-modules/root/data-hub/5/data-services/bulk/deleteJobs.api";
 
     static class CapturingErrorListener implements ExecCaller.BulkExecCaller.ErrorListener {
         private Throwable throwable = null;
@@ -60,26 +60,17 @@ public class DeleteJobsTest extends AbstractHubCoreTest {
         setupAndRunFlow();
     }
 
-    protected int getCollectionCount(DatabaseClient client, String... collections) {
-        String query = MessageFormat.format("cts.estimate(cts.collectionQuery([{0}]))",
-            Arrays.stream(collections).map(c -> "'" + c + "'").collect(Collectors.joining(","))
-        );
-        return Integer.parseInt(client.newServerEval().javascript(query).evalAs(String.class));
-    }
-
     protected void setupAndRunFlow() {
         installProjectInFolder("test-projects/simple-custom-step");
         new ReferenceModelProject(getHubClient()).createCustomerInstance(new Customer(1, "Jane"), "staging");
-
-        RunFlowResponse response = runFlow(new FlowInputs("simpleCustomStepFlow"));
-        RunStepResponse stepResponse = response.getStepResponses().get("1");
-
-        assertEquals("completed step 1", stepResponse.getStatus());
-        assertEquals(1, stepResponse.getSuccessfulBatches());
+        FlowInputs flowInputs = new FlowInputs();
+        flowInputs.setFlowName("simpleCustomStepFlow");
+        flowInputs.setSteps(Arrays.asList("1"));
+        runSuccessfulFlow(flowInputs);
     }
 
     protected void deleteJobs(String duration) throws Throwable {
-        final DatabaseClient dbClient = getHubClient().getFinalClient();
+        final DatabaseClient dbClient = getHubClient().getJobsClient();
         final CapturingErrorListener errorListener = new CapturingErrorListener();
 
         String endpointConstants = "{\"batchSize\":1,\"retainDuration\":\"" + duration +  "\"}";
@@ -98,7 +89,7 @@ public class DeleteJobsTest extends AbstractHubCoreTest {
     void testDeleteJobs() throws Throwable {
         runAsDataHubDeveloper();
         deleteJobs("PT0S");
-        int count = getCollectionCount(getHubClient().getJobsClient(), "Jobs");
+        int count = getJobsDocCount();
         assertEquals(0, count, "Jobs database should have no job or batch documents");
     }
 
@@ -106,7 +97,7 @@ public class DeleteJobsTest extends AbstractHubCoreTest {
     void testDeleteJobsWithRetain() throws Throwable {
         runAsDataHubDeveloper();
         deleteJobs("P1D");
-        int count = getCollectionCount(getHubClient().getJobsClient(), "Jobs");
+        int count = getJobsDocCount();
         assertEquals(2, count, "Jobs database should have 2 job and batch documents");
     }
 

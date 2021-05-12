@@ -1,0 +1,12 @@
+{
+	"job": {
+		"jobId": "6009169633194182308",
+		"flow": "hub4",
+		"user": "flow-developer",
+		"lastAttemptedStep": "1",
+		"lastCompletedStep": "1",
+		"jobStatus": "finished",
+		"timeStarted": "2019-02-05T19:00:00.000000-08:00",
+		"timeEnded": "2019-02-05T20:00:00.000000-08:00"
+	}
+}
