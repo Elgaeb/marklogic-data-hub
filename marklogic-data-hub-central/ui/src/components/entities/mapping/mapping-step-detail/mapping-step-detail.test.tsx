@@ -815,7 +815,7 @@ describe("RTL Source-to-entity map tests", () => {
     expect(getByLabelText("Product (BabyRegistry hasProduct)-title")).toBeInTheDocument();
   });
 
-  test("Verify right XPATH with source context selection and testing in related entity tables", async () => {
+  test.only("Verify right XPATH with source context selection and testing in related entity tables", async () => {
     const authorityService = new AuthoritiesService();
     authorityService.setAuthorities(["readMapping", "writeMapping"]);
 
@@ -826,7 +826,7 @@ describe("RTL Source-to-entity map tests", () => {
     mockUpdateMapArtifact.mockResolvedValueOnce({status: 200, data: true});
     mockGetMappingValidationResp.mockResolvedValue({status: 200, data: mappingStepPerson.artifacts[5]});
 
-    let getByTestId, getByLabelText, getAllByText, getByText, queryByTestId, getAllByRole, getAllByTestId;
+    let getByTestId, getByLabelText, getAllByText, getByText, queryByTestId, getAllByRole, getAllByTestId, debug;
     await act(async () => {
       const renderResults = renderWithRouter(personMappingStepWithRelatedEntityData, authorityService);
       getByTestId = renderResults.getByTestId;
@@ -836,6 +836,7 @@ describe("RTL Source-to-entity map tests", () => {
       queryByTestId = renderResults.queryByTestId;
       getAllByRole = renderResults.getAllByRole;
       getAllByTestId = renderResults.getAllByTestId;
+      debug = renderResults.debug;
     });
 
     //BabyRegistry table should be present on the screen
@@ -843,11 +844,10 @@ describe("RTL Source-to-entity map tests", () => {
 
     //Verify Context name and xpath field is present for only the related entity table
     expect(queryByTestId("Person-Context-name")).not.toBeInTheDocument();
-    expect(queryByTestId("BabyRegistry (ownedBy Person)-Context-name")).toBeInTheDocument();
-
+    expect(getByTestId("BabyRegistry (ownedBy Person)-Context-name")).toBeInTheDocument();
     expect(queryByTestId("Person-Context-mapexpression")).not.toBeInTheDocument();
-    expect(queryByTestId("BabyRegistry (ownedBy Person)-Context-mapexpression")).toBeInTheDocument();
-
+    expect(getByTestId("BabyRegistry (ownedBy Person)-Context-mapexpression")).toBeInTheDocument();
+    debug(getByTestId("babyregistry-table"));
     let mapExp = getByTestId("BabyRegistry (ownedBy Person)-Context-mapexpression");
     //Context value should be "/" by default
     expect(mapExp).toHaveTextContent("/");
@@ -1162,7 +1162,7 @@ describe("RTL Source-to-entity map tests", () => {
 
     //Verify that fx/source-data list is disabled for mapping reader user
     expect(getByTestId("propId-102-functionIcon")).toBeDisabled();
-    expect(getByTestId("propId-listIcon1")).toHaveAttribute("disabled");
+    expect(getByTestId("Person-propId-listIcon1")).toHaveAttribute("disabled");
   });
 
   test("Verify evaluation of invalid expression for mapping writer user", async () => {
@@ -1215,7 +1215,7 @@ describe("RTL Source-to-entity map tests", () => {
 
     //Verify that fx/source-data list is enabled for mapping writer user
     expect(getByTestId("propId-102-functionIcon")).toBeEnabled();
-    expect(getByTestId("propId-listIcon1")).not.toHaveAttribute("disabled");
+    expect(getByTestId("Person-propId-listIcon1")).not.toHaveAttribute("disabled");
   });
 
   test("Verify evaluation of invalid expression for mapping reader user", async () => {
@@ -1669,7 +1669,7 @@ describe("RTL Source Selector/Source Search tests", () => {
       queryByTestId = renderResults.queryByTestId;
     });
 
-    let sourceSelector = await waitForElement(() => getByTestId("itemTypes-listIcon"));
+    let sourceSelector = await waitForElement(() => getByTestId("Person-itemTypes-listIcon"));
 
     //corresponds to 'itemTypes' source selector
     fireEvent.click(sourceSelector);
@@ -1728,7 +1728,7 @@ describe("RTL Source Selector/Source Search tests", () => {
       getAllByTestId = renderResults.getAllByTestId;
     });
 
-    let sourceSelector = await waitForElement(() => getByTestId("itemTypes-listIcon"));
+    let sourceSelector = await waitForElement(() => getByTestId("Person-itemTypes-listIcon"));
     await wait(() => fireEvent.click(sourceSelector));
 
     //Verify object properties in source dropdown only appear once when data is an array of Objects
@@ -1769,7 +1769,7 @@ describe("RTL Source Selector/Source Search tests", () => {
       getAllByTestId = renderResults.getAllByTestId;
     });
 
-    let sourceSelector = await waitForElement(() => getByTestId("itemTypes-listIcon"));
+    let sourceSelector = await waitForElement(() => getByTestId("Person-itemTypes-listIcon"));
     await wait(() => fireEvent.click(sourceSelector));
 
     //Verify object properties in source dropdown only appear once when data is an array of Objects
@@ -1811,7 +1811,7 @@ describe("RTL Source Selector/Source Search tests", () => {
     expect(getByText("Entity Type: Person")).toBeInTheDocument();
     await wait(() => expect(getByText("Test")).toBeEnabled());
 
-    let sourceSelector = getByTestId("itemTypes-listIcon");
+    let sourceSelector = getByTestId("Person-itemTypes-listIcon");
 
     //corresponds to 'itemTypes' source selector
     fireEvent.click(sourceSelector);
@@ -1865,7 +1865,7 @@ describe("RTL Source Selector/Source Search tests", () => {
     //Expanding all the nested levels first
     await wait(() => fireEvent.click(within(getByTestId("srcContainer")).getByLabelText("radio-button-expand")));
     fireEvent.click(within(getByTestId("entityContainer")).getByLabelText("radio-button-expand"));
-    let sourceSelector = getByTestId("itemTypes-listIcon");
+    let sourceSelector = getByTestId("Person-itemTypes-listIcon");
 
     //corresponds to 'itemTypes' source selector
     fireEvent.click(sourceSelector);
@@ -1957,7 +1957,7 @@ describe("RTL Source Selector/Source Search tests", () => {
     //Right Xpath is populated
     expect(mapExp).toHaveTextContent("nutFreeName");
 
-    sourceSelector = getByTestId("itemTypes-listIcon");
+    sourceSelector = getByTestId("Person-itemTypes-listIcon");
     fireEvent.click(sourceSelector);
     await (waitForElement(() => getAllByRole("option"), {"timeout": 600}));
     let firstName = getAllByText("FirstNamePreferred");

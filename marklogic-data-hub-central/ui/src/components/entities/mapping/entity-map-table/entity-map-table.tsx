@@ -831,7 +831,7 @@ const EntityMapTable: React.FC<Props> = (props) => {
       indentList={sourceIndentForDropDown} />
   );
 
-  const menu = (
+  const functionMenu = (
     <DropDownWithSearch
       displayMenu={displayFuncMenu}
       setDisplayMenu={setDisplayFuncMenu}
@@ -844,6 +844,40 @@ const EntityMapTable: React.FC<Props> = (props) => {
       handleDropdownMenu={handleFunctionsList}
     />
   );
+
+  const xpathExpression = (row, handleOnChange, value) => {
+    return {
+      children: <div className={styles.mapExpParentContainer}><div className={styles.mapExpressionContainer}>
+        <TextArea
+          id={"mapexpression"+row.name.split("/").pop()}
+          data-testid={row.name.split("/").pop()+"-mapexpression"}
+          style={mapExpressionStyle(row.name, true)}
+          onClick={handleClickInTextArea}
+          value={value}
+          onChange={(e) => handleOnChange(row, e)}
+          onBlur={handleExpSubmit}
+          autoSize={{minRows: 1}}
+          disabled={!props.canReadWrite}></TextArea>&nbsp;&nbsp;
+        <span>
+          <Dropdown overlay={sourceSearchMenu} trigger={["click"]} disabled={!props.canReadWrite}>
+            <i id="listIcon" data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon1"}><FontAwesomeIcon icon={faList} size="lg"  data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon"}  className={styles.listIcon} onClick={(e) => handleSourceList(row)}/></i>
+          </Dropdown>
+        </span>
+        &nbsp;&nbsp;
+        {/* No function dropdowns for Context rows */}
+        {!(row.name === "Context") ? <span>
+          <Dropdown overlay={functionMenu} trigger={["click"]} disabled={!props.canReadWrite}>
+            <MLButton id="functionIcon" data-testid={`${row.name.split("/").pop()}-${row.key}-functionIcon`} className={styles.functionIcon} size="small" onClick={(e) => handleFunctionsList(row.name)}>fx</MLButton>
+          </Dropdown>
+        </span> : null}
+        </div>
+        {checkFieldInErrors(row.name, true) ? 
+          <div id="errorInExp" data-testid={row.name + "-expErr"} className={styles.validationErrors}>{displayResp(row.name, true)}</div> : 
+          ""}
+      </div>, 
+      props: {colSpan: 1}
+    }
+  };
 
   const getDefaultEntities = () => {
     let defaultSelected : any = [];
@@ -1042,66 +1076,11 @@ const EntityMapTable: React.FC<Props> = (props) => {
       render: (text, row, index) => {
         if (row.key > 100 && row.name !== "more" && row.name !== "less") {
           if (row.name === "Context" && !row.isProperty) {
-            return {children: <div className={styles.mapExpParentContainer}><div className={styles.mapExpressionContainer}>
-              <TextArea
-                id={"mapexpression"+row.name.split("/").pop()}
-                data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+`-mapexpression`}
-                style={mapExpressionStyle(row.name, false)}
-                onClick={handleClickInTextArea}
-                value={expressionContext}
-                onChange={(e) => handleExpressionContext(row, e)}
-                onBlur={handleExpSubmit}
-                autoSize={{minRows: 1}}
-                disabled={!props.canReadWrite}></TextArea>&nbsp;&nbsp;
-              <span>
-                <Dropdown overlay={sourceSearchMenu} trigger={["click"]} disabled={!props.canReadWrite}>
-                  <i  id="listIcon" data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon1"}><FontAwesomeIcon icon={faList} size="lg"  data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon"}  className={styles.listIcon} onClick={(e) => handleSourceList(row)}/></i>
-                </Dropdown>
-              </span>
-            </div>
-            {checkFieldInErrors(row.name, false) ? <div id="errorInExp" data-testid={row.name+"-expErr"} className={styles.validationErrors}>{displayResp(row.name, false)}</div> : ""}</div>, props: {colSpan: 1}};
+            return xpathExpression(row, handleExpressionContext, expressionContext);
           } else if (row.name === "URI" && !row.isProperty) {
-            return {children: <div className={styles.mapExpParentContainer}><div className={styles.mapExpressionContainer}>
-              <TextArea
-                id={"mapexpression"+row.name.split("/").pop()}
-                data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+`-mapexpression`}
-                style={mapExpressionStyle(row.name, false)}
-                onClick={handleClickInTextArea}
-                value={uriExpression}
-                onChange={(e) => handleUri(row, e)}
-                onBlur={handleExpSubmit}
-                autoSize={{minRows: 1}}
-                disabled={!props.canReadWrite}></TextArea>&nbsp;&nbsp;
-              <span>
-                <Dropdown overlay={sourceSearchMenu} trigger={["click"]} disabled={!props.canReadWrite}>
-                  <i  id="listIcon" data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon1"}><FontAwesomeIcon icon={faList} size="lg"  data-testid={`${props.entityTypeTitle}-` + row.name.split("/").pop()+"-listIcon"}  className={styles.listIcon} onClick={(e) => handleSourceList(row)}/></i>
-                </Dropdown>
-              </span>
-                &nbsp;&nbsp;
-              <span><Dropdown overlay={menu} trigger={["click"]} disabled={!props.canReadWrite}><MLButton id="functionIcon" data-testid={`${row.name.split("/").pop()}-${row.key}-functionIcon`} className={styles.functionIcon} size="small" onClick={(e) => handleFunctionsList(row.name)}>fx</MLButton></Dropdown></span>
-            </div>
-            {checkFieldInErrors(row.name, false) ? <div id="errorInExp" data-testid={row.name+"-expErr"} className={styles.validationErrors}>{displayResp(row.name, false)}</div> : ""}</div>, props: {colSpan: 1}};
+            return xpathExpression(row, handleUri, uriExpression);
           } else {
-            return {children: <div className={styles.mapExpParentContainer}><div className={styles.mapExpressionContainer}>
-              <TextArea
-                id={"mapexpression"+row.name.split("/").pop()}
-                data-testid={row.name.split("/").pop()+"-mapexpression"}
-                style={mapExpressionStyle(row.name, true)}
-                onClick={handleClickInTextArea}
-                value={mapExp[row.name]}
-                onChange={(e) => handleMapExp(row, e)}
-                onBlur={handleExpSubmit}
-                autoSize={{minRows: 1}}
-                disabled={!props.canReadWrite}></TextArea>&nbsp;&nbsp;
-              <span>
-                <Dropdown overlay={sourceSearchMenu} trigger={["click"]} disabled={!props.canReadWrite}>
-                  <i  id="listIcon" data-testid={row.name.split("/").pop()+"-listIcon1"}><FontAwesomeIcon icon={faList} size="lg"  data-testid={row.name.split("/").pop()+"-listIcon"}  className={styles.listIcon} onClick={(e) => handleSourceList(row)}/></i>
-                </Dropdown>
-              </span>
-                      &nbsp;&nbsp;
-              <span ><Dropdown overlay={menu} trigger={["click"]} disabled={!props.canReadWrite}><MLButton id="functionIcon" data-testid={`${row.name.split("/").pop()}-${row.key}-functionIcon`} className={styles.functionIcon} size="small" onClick={(e) => handleFunctionsList(row.name)}>fx</MLButton></Dropdown></span></div>
-            {checkFieldInErrors(row.name, true) ? <div id="errorInExp" data-testid={row.name + "-expErr"} className={styles.validationErrors}>{displayResp(row.name, true)}</div> : ""}</div>, props: {colSpan: 1}
-            };
+            return xpathExpression(row, handleMapExp, mapExp[row.name]);
           }
         } else if (row.name !== "more" && row.name !== "less") {
           return {children: null, props: {colSpan: 0}};
